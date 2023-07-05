@@ -14,17 +14,7 @@ const graficoParaDolar = new Chart(graficoDolar, {
     },
     
   });
-
-  setInterval(() => conectaAPI(), 5000);
-  async function conectaAPI() {
-    const conecta = await fetch ("https://economia.awesomeapi.com.br/json/last/USD-BRL ")
-    const conectaTraduzido = await conecta.json();
-    let tempo = geraHorario();
-    let valor = conectaTraduzido.USDBRL.ask;
-    adicionarDados(graficoParaDolar, tempo, valor)
-    imprimeCotacao("dolar", valor);
-  }
-
+ 
   function geraHorario() {
     let data = new Date();
     let horario = data.getHours() + ":" + data.getMinutes() + ":" + data.getSeconds();
@@ -40,3 +30,26 @@ const graficoParaDolar = new Chart(graficoDolar, {
 
     grafico.update();
   }
+
+  let workerDolar = new Worker('./script/workers/workerDolar.js');
+  workerDolar.postMessage('usd');
+
+  workerDolar.addEventListener("message", event => {
+    let tempo = geraHorario(); 
+    let valor = event.data.ask;
+    imprimeCotacao("dolar", valor);
+    adicionarDados(graficoParaDolar, tempo, valor);
+  })
+
+  const graficoIene = document.getElementById('graficoIene');
+  const graficoParaIene = new Chart(graficoIene, {
+    type:'line',
+    data: {
+      labels:[],
+      datasets: [{
+        label: 'Iene',
+        data: [],
+        borderWidth: 1 
+      }]
+    }
+  })
